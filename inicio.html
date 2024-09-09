@@ -3,7 +3,6 @@
 <head>
   <!-- Required meta tags -->
   <meta charset=utf-8>
-  <meta name=viewport content=width=device-width, initial-scale=1, shrink-to-fit=no>
   <!-- Bootstrap CSS -->
   <title>Compscript</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -41,12 +40,12 @@
     <br><br>
 
     <div class="code-area">
-      <label for="code">Editor:</label>
-      <textarea id="code" rows="20" cols="80">// Código fuente</textarea>
+      <label >Editor:</label>
+      <textarea id="editor" rows="20" cols="80">// Código fuente</textarea>
     </div>
 
     <div class="run-btn">
-      <button type="submit" class="btn btn-outline-light btn-lg"><i class="bi bi-play-circle"></i>
+      <button id="btn"  class="btn btn-outline-light btn-lg"><i class="bi bi-play-circle"></i>
         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-camera-reels-fill" viewBox="0 0 16 16">
           <path d="M6 3a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
           <path d="M9 6a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
@@ -55,13 +54,13 @@
     </div>
 
     <br><br>
-
+    <pre id="ast"></pre>
     <div class="console">
-      <label for="console">Console:</label>
-      <textarea id="console" rows="5" cols="80" readonly></textarea>
+      <label >Console:</label>
+      <textarea id="salida" rows="5" cols="80" readonly></textarea>
     </div>
   </div>
-
+  <script type="module" src="inicio.js"></script>
   <script>
     function openDialog() {
       document.getElementById('fileInput').click();
@@ -89,8 +88,8 @@
     }
 
     function limpiar() {
-      document.getElementById('code').value = '';
-      document.getElementById('console').value = '';
+      document.getElementById('salida').value = '';
+      document.getElementById('editor').value = '';
     }
   </script>
 </body>
