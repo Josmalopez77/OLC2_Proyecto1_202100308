@@ -31,7 +31,12 @@ export class Entorno {
      */
     getVariable(nombre) {
         const valorActual = this.valores[nombre];
-
+        /*if (nombre == "true") {
+            return true;
+        }
+        if (nombre == "false") {
+            return false;
+        } */
         if (valorActual !== undefined) return valorActual;
 
         if (this.padre) {
@@ -60,4 +65,18 @@ export class Entorno {
 
     throw new Error(`Variable ${nombre} no definida`);
 }
+/**
+     * @type {BaseVisitor['visitGet']}
+     */
+visitGet(node){
+    const instan = node.objetivo.accept(this);
+
+        if(!(instan.valor instanceof Instancia)){
+            let err = new SemanticError(node.location.start.line,node.location.start.column,`La variable ${instan.valor} no es una instancia`);
+            errores.push(err);
+        }
+
+        return instan.valor.get(node.propiedad,node);
+}
+
 }

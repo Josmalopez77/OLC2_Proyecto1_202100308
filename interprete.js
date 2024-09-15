@@ -26,6 +26,13 @@ export class InterpreterVisitor extends BaseVisitor {
         this.prevContinue = null;
     }
 
+    /**
+    *@type {BaseVisitor['visitExpresion']} 
+    */ 
+    visitExpresion(node) {
+        throw new Error('Metodo visitExpresion no implementado');
+    }
+
     interpretar(nodo) {
         return nodo.accept(this);
     }
@@ -61,6 +68,10 @@ export class InterpreterVisitor extends BaseVisitor {
                 return izq > der;
             case '<':
                 return izq < der;
+            case '&&':
+                return izq && der;
+            case '||':
+                return izq || der;
             default:
                 throw new Error(`Operador no soportado: ${node.op}`);
         }
@@ -75,6 +86,8 @@ export class InterpreterVisitor extends BaseVisitor {
         switch (node.op) {
             case '-':
                 return -exp;
+            case '!':
+                return !exp;
             default:
                 throw new Error(`Operador no soportado: ${node.op}`);
         }
@@ -149,6 +162,12 @@ export class InterpreterVisitor extends BaseVisitor {
       */
     visitReferenciaVariable(node) {
         const nombreVariable = node.id;
+        if (nombreVariable === "true") {
+            return true;
+        }
+        if (nombreVariable === "false") {
+            return false;
+        }
         const variable = this.entornoActual.getVariable(nombreVariable);
         return variable.valor;
     }
@@ -333,6 +352,20 @@ export class InterpreterVisitor extends BaseVisitor {
         }
 
         return funcion.invocar(this, argumentos);
+    }
+
+       /**
+     * @type {BaseVisitor['visitGet']}
+     */
+       visitGet(node){
+        const instan = node.objetivo.accept(this);
+
+            if(!(instan.valor instanceof instan)){
+                let err = new SemanticError(node.location.start.line,node.location.start.column,`La variable ${instan.valor} no es una instancia`);
+                errores.push(err);
+            }
+
+            return instan.valor.get(node.propiedad,node);
     }
 
 }

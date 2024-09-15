@@ -60,6 +60,8 @@
 
  * @typedef {import('./nodos').Llamada} Llamada
 
+ * @typedef {import('./nodos').Get} Get
+
  */
 
 
@@ -260,6 +262,14 @@ export class BaseVisitor {
      */
     visitLlamada(node) {
         throw new Error('Metodo visitLlamada no implementado');
+    }
+
+     /**
+     * @param {Get} node
+     * @returns {any}
+     */
+     visitGet(node) {
+        throw new Error('Metodo visitGet no implementado');
     }
     
 }

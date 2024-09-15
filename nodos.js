@@ -662,5 +662,38 @@ export class Llamada extends Expresion {
         return visitor.visitLlamada(this);
     }
 }
+export class Get extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {Expresion} options.objetivo Objeto a obtener
+ * @param {string} options.propiedad Propiedad a obtener
+    */
+    constructor({ objetivo, propiedad }) {
+        super();
+        
+        /**
+         * Objeto a obtener
+         * @type {Expresion}
+        */
+        this.objetivo = objetivo;
+
+
+        /**
+         * Propiedad a obtener
+         * @type {string}
+        */
+        this.propiedad = propiedad;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitGet(this);
+    }
+}
+
     
-export default { Expresion, OperacionBinaria, OperacionUnaria, Agrupacion, Numero, Char,Float, String, Boolean, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada }
+export default { Expresion, OperacionBinaria, OperacionUnaria, Agrupacion, Numero, Char,Float, String, Boolean, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, Get }
