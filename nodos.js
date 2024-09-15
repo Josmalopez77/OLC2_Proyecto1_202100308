@@ -269,8 +269,9 @@ export class DeclaracionVariable extends Expresion {
     * @param {Object} options
     * @param {string} options.id Identificador de la variable
  * @param {Expresion} options.exp Expresion de la variable
+ * @param {string} options.tipo Tipo de la variable
     */
-    constructor({ id, exp }) {
+    constructor({ id, exp, tipo }) {
         super();
         
         /**
@@ -285,6 +286,12 @@ export class DeclaracionVariable extends Expresion {
          * @type {Expresion}
         */
         this.exp = exp;
+
+        /**
+         * Expresion de la variable
+         * @type {string}
+        */
+        this.tipo = tipo;
 
     }
 
@@ -374,11 +381,12 @@ export class ExpresionStmt extends Expresion {
 export class Asignacion extends Expresion {
 
     /**
-    * @param {Object} options
+ *     * @param {Object} options
     * @param {string} options.id Identificador de la variable
- * @param {Expresion} options.asgn Expresion a asignar
+ * @param {Expresion} options.exp Expresion de la variable
+ * @param {string} options.tipo Tipo de la variable
     */
-    constructor({ id, asgn }) {
+    constructor({ id, asgn, tipo }) {
         super();
         
         /**
@@ -393,6 +401,13 @@ export class Asignacion extends Expresion {
          * @type {Expresion}
         */
         this.asgn = asgn;
+
+        /**
+         * Identificador de la variable
+         * @type {string}
+        */
+        this.tipo = tipo;
+
 
     }
 

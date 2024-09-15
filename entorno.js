@@ -12,12 +12,19 @@ export class Entorno {
 
     /**
      * @param {string} nombre
-     * @param {any} valor
+     * @param {object} valor
      */
     setVariable(nombre, valor) {
-        // TODO: si algo ya está definido, lanzar error
+        if (this.valores[nombre] !== undefined) {
+            throw new Error(`Variable ${nombre} ya definida`);
+        }
+
         this.valores[nombre] = valor;
     }
+    
+    
+
+    
 
     /**
      * @param {string} nombre
@@ -27,7 +34,7 @@ export class Entorno {
 
         if (valorActual !== undefined) return valorActual;
 
-        if (!valorActual && this.padre) {
+        if (this.padre) {
             return this.padre.getVariable(nombre);
         }
 
@@ -36,21 +43,21 @@ export class Entorno {
 
     /**
    * @param {string} nombre
-   * @param {any} valor
+   * @param {Object} valor
    */
     assignVariable(nombre, valor) {
         const valorActual = this.valores[nombre];
 
-        if (valorActual !== undefined) {
-            this.valores[nombre] = valor;
-            return;
-        }
-
-        if (!valorActual && this.padre) {
-            this.padre.assignVariable(nombre, valor);
-            return;
-        }
-
-        throw new Error(`Variable ${nombre} no definida`);
+    if (valorActual !== undefined) {
+        valorActual.valor = valor;
+        return;
     }
+
+    if (this.padre) {
+        this.padre.assignVariable(nombre, valor);
+        return;
+    }
+
+    throw new Error(`Variable ${nombre} no definida`);
+}
 }

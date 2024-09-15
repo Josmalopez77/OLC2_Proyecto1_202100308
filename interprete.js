@@ -36,6 +36,7 @@ export class InterpreterVisitor extends BaseVisitor {
     visitOperacionBinaria(node) {
         const izq = node.izq.accept(this);
         const der = node.der.accept(this);
+        console.log(`Izquierda: ${izq}, Derecha: ${der}, Operador: ${node.op}`);
 
         switch (node.op) {
             case '+':
@@ -46,10 +47,20 @@ export class InterpreterVisitor extends BaseVisitor {
                 return izq * der;
             case '/':
                 return izq / der;
+            case '%':
+                return izq % der;
             case '<=':
                 return izq <= der;
             case '==':
                 return izq === der;
+            case '!=':
+                return izq !== der;
+            case '>=':
+                return izq >= der;
+            case '>':
+                return izq > der;
+            case '<':
+                return izq < der;
             default:
                 throw new Error(`Operador no soportado: ${node.op}`);
         }
@@ -105,7 +116,7 @@ export class InterpreterVisitor extends BaseVisitor {
     }
 
      /**
-      * @type {BaseVisitor['visitFlaot']}
+      * @type {BaseVisitor['visitFloat']}
       */
      visitFloat(node) {
         return node.valor;
@@ -117,10 +128,20 @@ export class InterpreterVisitor extends BaseVisitor {
      */
     visitDeclaracionVariable(node) {
         const nombreVariable = node.id;
-        const valorVariable = node.exp.accept(this);
+        const tipoVariable = node.tipo;
 
-        this.entornoActual.setVariable(nombreVariable, valorVariable);
-    }
+        if (node.exp && typeof node.exp.accept === 'function') {
+            const valorVariable = node.exp.accept(this);
+            console.log(`Declarando variable ${nombreVariable} de tipo ${tipoVariable} con valor ${valorVariable}`);
+            this.entornoActual.setVariable(nombreVariable, { valor: valorVariable, tipo: tipoVariable });
+            return;
+        } 
+        const valorVariable = node.exp;
+        console.log(`Declarando variable ${nombreVariable} de tipo ${tipoVariable} con valor ${valorVariable}`);
+
+    this.entornoActual.setVariable(nombreVariable, { valor: valorVariable, tipo: tipoVariable });
+   
+}
 
 
     /**
@@ -128,7 +149,8 @@ export class InterpreterVisitor extends BaseVisitor {
       */
     visitReferenciaVariable(node) {
         const nombreVariable = node.id;
-        return this.entornoActual.getVariable(nombreVariable);
+        const variable = this.entornoActual.getVariable(nombreVariable);
+        return variable.valor;
     }
 
 
@@ -152,11 +174,30 @@ export class InterpreterVisitor extends BaseVisitor {
      * @type {BaseVisitor['visitAsignacion']}
      */
     visitAsignacion(node) {
-        // const valor = this.interpretar(node.asgn);
         const valor = node.asgn.accept(this);
-        this.entornoActual.assignVariable(node.id, valor);
+        let tipoVariable = typeof valor;
 
-        return valor;
+        if(tipoVariable === "number") {
+            if(Number.isInteger(valor)) {
+                tipoVariable = "int";
+            }else {
+                tipoVariable = "float";
+            }
+        }
+    
+        
+    console.log(`Tipo del valor a asignar: ${tipoVariable}`);
+
+    const variable = this.entornoActual.getVariable(node.id);
+    console.log(`Tipo esperado de la variable: ${variable.tipo}`);
+
+    if (variable.tipo != tipoVariable) {
+        throw new Error(`Tipo de valor incorrecto para la variable ${node.id}. Esperado ${variable.tipo}, recibido ${valor.tipo}.`);
+    }
+
+    this.entornoActual.assignVariable(node.id, valor);
+
+    return valor;
     }
 
     /**

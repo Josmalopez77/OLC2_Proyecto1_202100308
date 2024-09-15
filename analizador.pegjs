@@ -5,7 +5,7 @@
     'float': nodos.Float,
     'int': nodos.Int,
     'numero': nodos.Numero,
-    'char': nodos.Char, // Agregar aquí todos los tipos
+    'char': nodos.Char, 
     'string': nodos.String,
     'boolean': nodos.Boolean,
     'agrupacion': nodos.Agrupacion,
@@ -40,17 +40,22 @@
 
 programa = _ dcl:Declaracion* _ { return dcl }
 
-Declaracion = dcl:tipoVar _ { return dcl }
+Declaracion = dcl:tipoVar _ { console.log("DECLARANDO"); return dcl }
             / stmt:Stmt _ { return stmt }
 
 
-tipoVar = tipoFloat / tipoInt /  tipoString  / tipoChar / tipoBoolean / "var" _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable', { id, exp }) }
-tipoFloat = "float" _ id:Identificador _ "=" _ exp:Float _ ";" { return crearNodo('declaracionVariable', { id, exp, tipo:"float" }) }
-tipoInt = "int" _ id:Identificador _ "=" _ exp:Int _ ";" { return crearNodo('declaracionVariable', { id, exp,tipo:"int" }) }
-tipoString = "string" _ id:Identificador _ "=" _ exp:Cadena _ ";" { return crearNodo('declaracionVariable', { id, exp }) }
-tipoBoolean = "boolean" _ id:Identificador _ "=" _ exp:Boolean _ ";" { return crearNodo('declaracionVariable', { id, exp }) }
-tipoChar = "char" _ id:Identificador _ "=" _ exp:Char _ ";" { return crearNodo('declaracionVariable', { id, exp }) }
+tipoVar =  tipoString2  / tipoChar2 / tipoBoolean2 /tipoInt2/tipoFloat2 /tipoInt / tipoFloat /  tipoString  / tipoChar/ tipoBoolean /   "var" _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable', { id, exp }) }
+tipoFloat = "float" _ id:Identificador _ "=" _ exp:Float _ ";"  {  return crearNodo('declaracionVariable', { id, exp, tipo: "float" });  }
+tipoInt = "int" _ id:Identificador _ "=" _ exp:Int _ ";"  { return crearNodo('declaracionVariable', { id, exp,tipo:"int" }) }
+tipoString = "string" _ id:Identificador _ "=" _ exp:Cadena _ ";" { return crearNodo('declaracionVariable', { id, exp,tipo:"string" }) }
+tipoBoolean = "boolean" _ id:Identificador _ "=" _ exp:Boolean _ ";" { return crearNodo('declaracionVariable', { id, exp,tipo:"boolean" }) }
+tipoChar = "char" _ id:Identificador _ "=" _ exp:Char _ ";"{ return crearNodo('declaracionVariable', { id, exp, tipo:"string" }) }
 
+tipoFloat2 = "float" _ id:Identificador _  ";"  {  return crearNodo('declaracionVariable', { id, exp:0.00, tipo: "float" });  }
+tipoInt2 = "int" _ id:Identificador _  ";"  { return crearNodo('declaracionVariable', { id, exp:0,tipo:"int" }) }
+tipoString2 = "string" _ id:Identificador _ ";" { return crearNodo('declaracionVariable', { id, exp:"",tipo:"string" }) }
+tipoBoolean2 = "boolean" _ id:Identificador _  ";" { return crearNodo('declaracionVariable', { id, exp:true,tipo:"boolean" }) }
+tipoChar2 = "char" _ id:Identificador _ ";"{ return crearNodo('declaracionVariable', { id, exp:'', tipo:"string" }) }
 
 Stmt = "System.out.println(" _ exp:Expresion _ ")" _ ";" { return crearNodo('print', { exp }) }
     / "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }
@@ -74,13 +79,15 @@ ForInit = dcl:tipoVar { return dcl }
 Identificador = [a-zA-Z][a-zA-Z0-9]* { return text() }
 
 
-Expresion =  Asignacion/ Char / Cadena/ Boolean  / Float/ Int / Identificador/  "(" _ exp:Expresion _ ")" { return exp }
+Expresion =  Float/ Asignacion/ Comparacion /Suma/Multiplicacion/Unaria/Llamada/ Char / Cadena/ Boolean  / Int / Identificador / "(" _ exp:Expresion _ ")" { return exp }
 
-Asignacion = id:Identificador _ "=" _ asgn:Expresion { return crearNodo('asignacion', { id, asgn }) }
+Asignacion = id:Identificador _ "=" _ asgn:Expresion { console.log("Reasignando a:", id, "con valor:", asgn);return crearNodo('asignacion', { id, asgn }) }
           / Comparacion 
 
+
+
 Comparacion = izq:Suma expansion:(
-  _ op:("<=" / "==") _ der:Suma { return { tipo: op, der } }
+  _ op:("<=" / "==" / ">=" / "<" / ">" / "!=") _ der:Suma { return { tipo: op, der } }
 )* { 
   return expansion.reduce(
     (operacionAnterior, operacionActual) => {
@@ -91,47 +98,49 @@ Comparacion = izq:Suma expansion:(
   )
 }
 
+Numero = Float / Int
 
 Suma = izq:Multiplicacion expansion:(
   _ op:("+" / "-") _ der:Multiplicacion { return { tipo: op, der } }
 )* { 
   return expansion.reduce(
     (operacionAnterior, operacionActual) => {
-      const { tipo, der } = operacionActual
-      return crearNodo('binaria', { op:tipo, izq: operacionAnterior, der })
+      const { tipo, der } = operacionActual;
+      return crearNodo('binaria', { op: tipo, izq: operacionAnterior, der });
     },
     izq
-  )
+  );
 }
 
 Multiplicacion = izq:Unaria expansion:(
-  _ op:("*" / "/") _ der:Unaria { return { tipo: op, der } }
+  _ op:("*" / "/" / "%") _ der:Unaria { return { tipo: op, der } }
 )* {
     return expansion.reduce(
       (operacionAnterior, operacionActual) => {
-        const { tipo, der } = operacionActual
-        return crearNodo('binaria', { op:tipo, izq: operacionAnterior, der })
+        const { tipo, der } = operacionActual;
+        return crearNodo('binaria', { op: tipo, izq: operacionAnterior, der });
       },
       izq
-    )
+    );
 }
 
-Unaria = "-" _ num:Unaria { return crearNodo('unaria', { op: '-', exp: num }) }
-/ Llamada
+// Operaciones Unarias
+Unaria = "-" _ num:Unaria { return crearNodo('unaria', { op: '-', exp: num }); }
+       / Numero
+       / Llamada
 
-Llamada = callee:Int _ params:("(" args:Argumentos? ")" { return args })* {
+// Llamada de Función
+Llamada = callee:Identificador _ params:("(" args:Argumentos? ")" { return args })* {
   return params.reduce(
     (callee, args) => {
-      return crearNodo('llamada', { callee, args: args || [] })
+      return crearNodo('llamada', { callee, args: args || [] });
     },
     callee
-  )
+  );
 }
 
-// a()()
-// NODO-> callee: a, params: [] --- CALLEE1
-// NODO-> callee: NODO-> callee: CALLEE1, params: []
 
+// Argumentos para la llamada de función
 Argumentos = arg:Expresion _ args:("," _ exp:Expresion { return exp })* { return [arg, ...args] }
 
 Cadena = '"' texto:[^"]* '"' { return crearNodo('string', { valor: texto.join('') }) }
@@ -141,7 +150,6 @@ Char = "'" texto:[^']* "'" { return crearNodo('char', { valor: texto.join('') })
 
 Float = [0-9]+( "." [0-9]+ ) {return crearNodo('float', { valor: parseFloat(text(), 10) })}
   / "(" _ exp:Expresion _ ")" { return crearNodo('agrupacion', { exp }) }
-  / "new" _ id:Identificador _ "(" _ args:Argumentos? _ ")" { return crearNodo('instancia', { id, args: args || [] }) }
   / id:Identificador { return crearNodo('referenciaVariable', { id }) }
 
 Int = [0-9]+ {return crearNodo('numero', { valor: parseInt(text(), 10) })}
