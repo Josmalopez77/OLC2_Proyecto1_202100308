@@ -566,6 +566,96 @@ export class For extends Expresion {
         return visitor.visitFor(this);
     }
 }
+
+export class Switch extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {Expresion} options.exp Expresion a evaluar
+ * @param {Expresion []} options.cases Casos del switch
+ * @param {Expresion[]|undefined} options.defa Caso por defecto
+    */
+    constructor({ exp, cases, defa }) {
+        super();
+        
+        /**
+         * Expresion a evaluar
+         * @type {Expresion}
+        */
+        this.exp = exp;
+
+
+        /**
+         * Casos del switch
+         * @type {Expresion []}
+        */
+        this.cases = cases;
+
+
+        /**
+         * Caso por defecto
+         * @type {Expresion[]|undefined}
+        */
+        this.defa = defa;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitSwitch(this);
+    }
+}
+
+export class Foreach extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.tipo Tipo de la lista
+ * @param {string} options.id Identificador de la lista
+ * @param {string} options.id2 Identificador de la variable
+ * @param {Expresion} options.stmt Sentencia del foreach
+    */
+    constructor({ tipo, id, id2, stmt }) {
+        super();
+        
+        /**
+         * Tipo de la lista
+         * @type {string}
+        */
+        this.tipo = tipo;
+
+
+        /**
+         * Identificador de la lista
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * Identificador de la variable
+         * @type {string}
+        */
+        this.id2 = id2;
+
+
+        /**
+         * Sentencia del foreach
+         * @type {Expresion}
+        */
+        this.stmt = stmt;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitForeach(this);
+    }
+}
     
 export class Break extends Expresion {
 
@@ -696,4 +786,4 @@ export class Get extends Expresion {
 }
 
     
-export default { Expresion, OperacionBinaria, OperacionUnaria, Agrupacion, Numero, Char,Float, String, Boolean, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Break, Continue, Return, Llamada, Get }
+export default { Expresion, OperacionBinaria, OperacionUnaria, Agrupacion, Numero, Char,Float, String, Boolean, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Switch, Break, Continue, Return, Llamada, Get }

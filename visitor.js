@@ -48,6 +48,8 @@
 
  * @typedef {import('./nodos').For} For
 
+    * @typedef {import('./nodos').Switch} Switch
+
 
  * @typedef {import('./nodos').Break} Break
 
@@ -227,6 +229,14 @@ export class BaseVisitor {
     visitFor(node) {
         throw new Error('Metodo visitFor no implementado');
     }
+
+        /**
+     * @param {Switch} node
+     * @returns {any}
+     */
+        visitSwitch(node) {
+            throw new Error('Metodo visitSwitch no implementado');
+        }
     
 
     /**

@@ -19,11 +19,13 @@
     'if': nodos.If,
     'while': nodos.While,
     'for': nodos.For,
+    'switch': nodos.Switch,
     'break': nodos.Break,
     'continue': nodos.Continue,
     'return': nodos.Return,
     'llamada': nodos.Llamada,
-    'get': nodos.Get
+    'get': nodos.Get,
+    'foreach': nodos.Foreach
   };
 
   // Verificar si el tipo de nodo está definido
@@ -66,6 +68,8 @@ Stmt = "System.out.println(" _ exp:Expresion _ ")" _ ";" { return crearNodo('pri
     / "for" _ "(" _ init:ForInit _ cond:Expresion _ ";" _ inc:Expresion _ ")" _ stmt:Stmt {
       return crearNodo('for', { init, cond, inc, stmt })
     }
+    /Foreach
+    / "switch" _ "(" _ exp:Expresion _ ")" _ "{" _ cases:Case* _ defa:Defaul? _ "}" { return crearNodo('switch', { exp, cases, defa }) }
     / "break" _ ";" { return crearNodo('break') }
     / "continue" _ ";" { return crearNodo('continue') }
     / "return" _ exp:Expresion? _ ";" { return crearNodo('return', { exp }) }
@@ -74,6 +78,10 @@ Stmt = "System.out.println(" _ exp:Expresion _ ")" _ ";" { return crearNodo('pri
 ForInit = dcl:tipoVar { return dcl }
         / exp:Expresion _ ";" { return exp }
         / ";" { return null }
+
+Foreach =  "for" _ "(" _ tipo: tipos2 _ id: Identificador _ ":" _ id2: Identificador _ ")" _ stmt: Stmt {return crearNodo('foreach', {tipo, id, id2, stmt})}
+Case = "case" _ exp:Expresion _ ":" _ stmt:( _ stmt:Declaracion _ {return stmt})* _ { return { exp, stmt } }
+Defaul = "default" _ ":" _ stmt:(_ stmt: Declaracion _ {return stmt})*_ { return stmt  }
 
 Identificador = [a-zA-Z][a-zA-Z0-9]* { return text() }
 

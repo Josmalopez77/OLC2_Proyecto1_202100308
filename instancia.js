@@ -1,36 +1,79 @@
-import { Struct } from './struct.js';
-import { SemanticError } from "./transfer.js";
-import { errores } from "./index.js";
+import { FuncionForanea } from "./foreanea.js";
+import { Instancia } from "./instancia.js";
+import { Invocable } from "./invocable.js";
+import { Expresion } from "./nodos.js";
 
-export class Instancia  {
 
+export class Clase extends Invocable {
 
-    constructor(struct){
+    constructor(nombre, propiedades, metodos) {
+        super();
+
         /**
-         * @type {Struct}
+         * @type {string}
          */
-        this.struct = struct;
+        this.nombre = nombre;
 
-        this.properties = {};
-        
+        /**
+         * @type {Object.<string, Expresion>}
+         */
+        this.propiedades = propiedades;
+
+        /**
+         * @type {Object.<string, FuncionForanea>}
+         */
+        this.metodos = metodos;
     }
 
-
-    set(nombre, valor, nodo) {
-
-        if (!(nombre in this.struct.properties)) {
-            let err = new SemanticError(nodo.location.start.line, nodo.location.start.column, `Propiedad no encontrada: ${nombre}`);
-            errores.push(err);
+    /**
+    * @param {string} nombre
+    * @returns {FuncionForanea | null}
+    */
+    buscarMetodo(nombre) {
+        if (this.metodos.hasOwnProperty(nombre)) {
+            return this.metodos[nombre];
         }
-        this.struct.properties[nombre] = valor;
+        return null;
     }
 
-    get(nombre,nodo) {
-        if(this.struct.properties.hasOwnProperty(nombre)){
-            return this.struct.properties[nombre];
+    aridad() {
+        const constructor = this.buscarMetodo('constructor');
+
+        if (constructor) {
+            return constructor.aridad();
         }
 
-        let err = new SemanticError(nodo.location.start.line, nodo.location.start.column, `Propiedad no encontrada: ${nombre}`);
-        errores.push(err);
+        return 0;
     }
+
+
+    /**
+    * @type {Invocable['invocar']}
+    */
+    invocar(interprete, args) {
+        const nuevaIntancia = new Instancia(this);
+
+        /*
+        class asdasd {
+            var a = 2;
+
+            constructor(a) {
+                this.a = 4;
+                this.b = 4;
+            }   
+        }
+    */
+        // valores por defecto
+        Object.entries(this.propiedades).forEach(([nombre, valor]) => {
+            nuevaIntancia.set(nombre, valor.accept(interprete));
+        });
+
+        const constructor = this.buscarMetodo('constructor');
+        if (constructor) {
+            constructor.atar(nuevaIntancia).invocar(interprete, args);
+        }
+
+        return nuevaIntancia;
+    }
+
 }
