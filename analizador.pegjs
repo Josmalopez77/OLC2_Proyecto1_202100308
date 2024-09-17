@@ -73,12 +73,12 @@ Parameters = tipo:(vals/ Identificador) dimen:Dimensiones? _ id:Identificador {r
 Dimensiones = ("[" _ "]")* {return text();}
 
 Bloque = "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }
-ClassDcl = "class" _ id:Identificador _ "{" _ dcls:ClassBody* _ "}" { return crearNodo('dclClase', { id, dcls }) }
+ClassDcl = "struct" _ id:Identificador _ "{" _ dcls:ClassBody* _ "}" { return crearNodo('declaracionClase', { id, dcls }) }
 
 ClassBody = dcl:tipoVar _ { return dcl }
           / dcl:FuncDcl _ { return dcl }
 
-Stmt = "System.out.println(" _ exp:Expresion _ ")" _ ";" { return crearNodo('print', { exp }) }
+Stmt = "System.out.println(" _ exp:Expresion _ exps: ( _ ","_ exps: Expresion {return exps})* _ ")" _ ";" { return crearNodo('print', {outputs: [exp, ...exps]}) }
     / "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }
     / "if" _ "(" _ cond:Expresion _ ")" _ stmtTrue:Stmt 
       stmtFalse:(

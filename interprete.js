@@ -181,8 +181,17 @@
          * @type {BaseVisitor['visitPrint']}
          */
         visitPrint(node) {
-            const valor = node.exp.accept(this);
-            this.salida += valor + '\n';
+            /* const valor = node.exp.accept(this);
+            this.salida += valor + '\n'; */
+
+            const output = node.outputs.map(exp => {
+                const valor = exp.accept(this);
+                    if(valor != null){
+                        return valor;
+                    }
+                    return "null";
+                });
+                this.salida += output.join(' ') + '\n';
         }
 
 
@@ -433,7 +442,7 @@
         const propiedades = {}
 
         node.dcls.forEach(dcl => {
-            if (dcl instanceof nodos.FuncDcl) {
+            if (dcl instanceof nodos.DeclaracionClase) {
                 metodos[dcl.id] = new FuncionForanea(dcl, this.entornoActual);
             } else if (dcl instanceof nodos.DeclaracionVariable) {
                 propiedades[dcl.id] = dcl.exp
