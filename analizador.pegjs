@@ -24,8 +24,12 @@
     'continue': nodos.Continue,
     'return': nodos.Return,
     'llamada': nodos.Llamada,
+    'foreach': nodos.Foreach,
+    'declaracionFuncion': nodos.DeclaracionFuncion,
+    'declaracionClase': nodos.DeclaracionClase,
+    'intancia:': nodos.Instancia,
     'get': nodos.Get,
-    'foreach': nodos.Foreach
+    'set': nodos.Set
   };
 
   // Verificar si el tipo de nodo está definido
@@ -41,7 +45,9 @@
 
 programa = _ dcl:Declaracion* _ { return dcl }
 
-Declaracion = dcl:tipoVar _ { console.log("DECLARANDO"); return dcl }
+Declaracion = dcl:ClassDcl _ { return dcl }
+            / dcl:tipoVar _ {  return dcl }
+            / dcl:FuncDcl _ { return dcl }
             / stmt:Stmt _ { return stmt }
 
 
@@ -57,6 +63,20 @@ tipoInt2 = "int" _ id:Identificador _  ";"  { return crearNodo('declaracionVaria
 tipoString2 = "string" _ id:Identificador _ ";" { return crearNodo('declaracionVariable', { id, exp:"",tipo:"string" }) }
 tipoBoolean2 = "boolean" _ id:Identificador _  ";" { return crearNodo('declaracionVariable', { id, exp:true,tipo:"boolean" }) }
 tipoChar2 = "char" _ id:Identificador _ ";"{ return crearNodo('declaracionVariable', { id, exp:'', tipo:"string" }) }
+
+vals = "int" / "float" / "string" / "char" / "boolean"
+
+FuncDcl = tipo:(vals/"void") _ id:Identificador _ "(" _ params:Parametros? _ ")" _ bloque:Bloque { return crearNodo('declaracionFuncion', { tipo, id, params: params || [], bloque }) }
+
+Parametros = param1:Parameters params:("," _ ids:Parameters { return ids })* { return [param1, ...params] }
+Parameters = tipo:(vals/ Identificador) dimen:Dimensiones? _ id:Identificador {return {tipo, id, dim:dimen || ""};}
+Dimensiones = ("[" _ "]")* {return text();}
+
+Bloque = "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }
+ClassDcl = "class" _ id:Identificador _ "{" _ dcls:ClassBody* _ "}" { return crearNodo('dclClase', { id, dcls }) }
+
+ClassBody = dcl:tipoVar _ { return dcl }
+          / dcl:FuncDcl _ { return dcl }
 
 Stmt = "System.out.println(" _ exp:Expresion _ ")" _ ";" { return crearNodo('print', { exp }) }
     / "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }

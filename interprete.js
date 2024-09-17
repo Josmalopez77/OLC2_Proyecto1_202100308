@@ -4,6 +4,9 @@
     import { BreakException, ContinueException, ReturnException } from "./transferencia.js";
     import { Invocable } from "./invocable.js";
     import { embebidas } from "./embebidas.js";
+    import { FuncionForanea } from "./foreanea.js";
+    import { Clase } from "./clase.js";
+    import { Instancia } from "./instancia.js";
 
 
     export class InterpreterVisitor extends BaseVisitor {
@@ -162,6 +165,7 @@
          */
         visitReferenciaVariable(node) {
             const nombreVariable = node.id;
+            console.log(`Referenciando variable ${nombreVariable}`);
             if (nombreVariable === "true") {
                 return true;
             }
@@ -409,17 +413,92 @@
         }
 
         /**
-         * @type {BaseVisitor['visitGet']}
-         */
-        visitGet(node){
-            const instan = node.objetivo.accept(this);
+    * @type {BaseVisitor['visitFuncDeclaracionFuncion']}
+    */
+    visitFuncDeclaracionFuncion(node) {
+        const funcion = new FuncionForanea(node, this.entornoActual);
+        console.log("DECLARANDO FUNCION", node.id);
+        console.log("DE TIPO", node.tipo);
+        console.log("ACCION",  funcion);
+        this.entornoActual.setVariable(node.id, {valor: funcion, tipo: node.tipo});
+    }
 
-                if(!(instan.valor instanceof instan)){
-                    let err = new SemanticError(node.location.start.line,node.location.start.column,`La variable ${instan.valor} no es una instancia`);
-                    errores.push(err);
-                }
 
-                return instan.valor.get(node.propiedad,node);
+    /**
+    * @type {BaseVisitor['visitDeclaracionClase']}
+    */
+    visitDeclaracionClase(node) {
+
+        const metodos = {}
+        const propiedades = {}
+
+        node.dcls.forEach(dcl => {
+            if (dcl instanceof nodos.FuncDcl) {
+                metodos[dcl.id] = new FuncionForanea(dcl, this.entornoActual);
+            } else if (dcl instanceof nodos.DeclaracionVariable) {
+                propiedades[dcl.id] = dcl.exp
+            }
+        });
+
+        const clase = new Clase(node.id, propiedades, metodos);
+
+        this.entornoActual.setVariable(node.id, { valor: clase, tipo: 'clase' });
+
+    }
+
+    /**
+    * @type {BaseVisitor['visitInstancia']}
+    */
+    visitInstancia(node) {
+
+        const clase = this.entornoActual.get(node.id);
+
+        const argumentos = node.args.map(arg => arg.accept(this));
+
+
+        if (!(clase instanceof Clase)) {
+            throw new Error('No es posible instanciar algo que no es una clase');
         }
+
+
+
+        return clase.invocar(this, argumentos);
+    }
+
+
+    /**
+    * @type {BaseVisitor['visitGet']}
+    */
+    visitGet(node) {
+
+        // var a = new Clase();
+        // a.propiedad
+        const instancia = node.objetivo.accept(this);
+
+        if (!(instancia instanceof Instancia)) {
+            console.log(instancia);
+            throw new Error('No es posible obtener una propiedad de algo que no es una instancia');
+        }
+
+        return instancia.get(node.propiedad);
+    }
+
+    /**
+    * @type {BaseVisitor['visitSet']}
+    */
+    visitSet(node) {
+        const instancia = node.objetivo.accept(this);
+
+        if (!(instancia instanceof Instancia)) {
+            throw new Error('No es posible asignar una propiedad de algo que no es una instancia');
+        }
+
+        const valor = node.valor.accept(this);
+
+        instancia.set(node.propiedad, valor);
+
+        return valor;
+    }
+        
 
     }

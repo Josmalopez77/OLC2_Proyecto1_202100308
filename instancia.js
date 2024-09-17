@@ -1,79 +1,30 @@
-import { FuncionForanea } from "./foreanea.js";
-import { Instancia } from "./instancia.js";
-import { Invocable } from "./invocable.js";
-import { Expresion } from "./nodos.js";
+import { Clase } from "./clase.js";
 
+export class Instancia {
 
-export class Clase extends Invocable {
-
-    constructor(nombre, propiedades, metodos) {
-        super();
+    constructor(clase) {
 
         /**
-         * @type {string}
-         */
-        this.nombre = nombre;
-
-        /**
-         * @type {Object.<string, Expresion>}
-         */
-        this.propiedades = propiedades;
-
-        /**
-         * @type {Object.<string, FuncionForanea>}
-         */
-        this.metodos = metodos;
+         * @type {Clase}
+         * */
+        this.clase = clase;
+        this.propiedades = {};
     }
 
-    /**
-    * @param {string} nombre
-    * @returns {FuncionForanea | null}
-    */
-    buscarMetodo(nombre) {
-        if (this.metodos.hasOwnProperty(nombre)) {
-            return this.metodos[nombre];
-        }
-        return null;
+    set(nombre, valor) {
+        this.propiedades[nombre] = valor;
     }
 
-    aridad() {
-        const constructor = this.buscarMetodo('constructor');
-
-        if (constructor) {
-            return constructor.aridad();
+    get(nombre) {
+        if (this.propiedades.hasOwnProperty(nombre)) {
+            return this.propiedades[nombre];
         }
 
-        return 0;
+        const metodo = this.clase.buscarMetodo(nombre);
+        if (metodo) {
+            return metodo.atar(this);
+        }
+
+        throw new Error(`Propiedad no encontrada: ${nombre}`);
     }
-
-
-    /**
-    * @type {Invocable['invocar']}
-    */
-    invocar(interprete, args) {
-        const nuevaIntancia = new Instancia(this);
-
-        /*
-        class asdasd {
-            var a = 2;
-
-            constructor(a) {
-                this.a = 4;
-                this.b = 4;
-            }   
-        }
-    */
-        // valores por defecto
-        Object.entries(this.propiedades).forEach(([nombre, valor]) => {
-            nuevaIntancia.set(nombre, valor.accept(interprete));
-        });
-
-        const constructor = this.buscarMetodo('constructor');
-        if (constructor) {
-            constructor.atar(nuevaIntancia).invocar(interprete, args);
-        }
-
-        return nuevaIntancia;
-    }
-
 }

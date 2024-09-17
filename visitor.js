@@ -62,10 +62,19 @@
 
  * @typedef {import('./nodos').Llamada} Llamada
 
+
+ * @typedef {import('./nodos').DeclaracionFuncion} DeclaracionFuncion
+
+
+ * @typedef {import('./nodos').DeclaracionClase} DeclaracionClase
+
+
+ * @typedef {import('./nodos').Instancia} Instancia
+
+
  * @typedef {import('./nodos').Get} Get
 
  */
-
 
 /**
  * Clase base para los visitantes
@@ -275,11 +284,47 @@ export class BaseVisitor {
     }
 
      /**
+     * @param {DeclaracionFuncion} node
+     * @returns {any}
+     */
+    visitFuncDeclaracionFuncion(node) {
+        throw new Error('Metodo visitFuncDcl no implementado');
+    }
+    
+
+    /**
+     * @param {DeclaracionClase} node
+     * @returns {any}
+     */
+    visitDeclaracionClase(node) {
+        throw new Error('Metodo visitClassDcl no implementado');
+    }
+    
+
+    /**
+     * @param {Instancia} node
+     * @returns {any}
+     */
+    visitInstancia(node) {
+        throw new Error('Metodo visitInstancia no implementado');
+    }
+    
+
+    /**
      * @param {Get} node
      * @returns {any}
      */
-     visitGet(node) {
+    visitGet(node) {
         throw new Error('Metodo visitGet no implementado');
+    }
+    
+
+    /**
+     * @param {Set} node
+     * @returns {any}
+     */
+    visitSet(node) {
+        throw new Error('Metodo visitSet no implementado');
     }
     
 }

@@ -752,25 +752,140 @@ export class Llamada extends Expresion {
         return visitor.visitLlamada(this);
     }
 }
+
+export class DeclaracionFuncion extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id Identificador de la funcion
+ * @param {string[]} options.params Parametros de la funcion
+ * @param {Bloque} options.bloque Cuerpo de la funcion
+ * @param {string} options.tipo Tipo de la funcion
+    */
+    constructor({ id, params, bloque, tipo }) {
+        super();
+        
+        /**
+         * Identificador de la funcion
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * Parametros de la funcion
+         * @type {string[]}
+        */
+        this.params = params;
+
+
+        /**
+         * Cuerpo de la funcion
+         * @type {Bloque}
+        */
+        this.bloque = bloque;
+
+        /**
+         * Tipo de la funcion
+         * @type {string}
+        */
+        this.tipo = tipo;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitFuncDeclaracionFuncion(this);
+    }
+}
+    
+export class DeclaracionClase extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id Identificador de la clase
+ * @param {Expresion[]} options.dcls Declaraciones de la clase
+    */
+    constructor({ id, dcls }) {
+        super();
+        
+        /**
+         * Identificador de la clase
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * Declaraciones de la clase
+         * @type {Expresion[]}
+        */
+        this.dcls = dcls;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitDeclaracionClase(this);
+    }
+}
+    
+export class Instancia extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id Identificador de la clase
+ * @param {Expresion[]} options.args Argumentos de la instancia
+    */
+    constructor({ id, args }) {
+        super();
+        
+        /**
+         * Identificador de la clase
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * Argumentos de la instancia
+         * @type {Expresion[]}
+        */
+        this.args = args;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitInstancia(this);
+    }
+}
+    
 export class Get extends Expresion {
 
     /**
     * @param {Object} options
-    * @param {Expresion} options.objetivo Objeto a obtener
- * @param {string} options.propiedad Propiedad a obtener
+    * @param {Expresion} options.objetivo Objeto de la propiedad
+ * @param {string} options.propiedad Identificador de la propiedad
     */
     constructor({ objetivo, propiedad }) {
         super();
         
         /**
-         * Objeto a obtener
+         * Objeto de la propiedad
          * @type {Expresion}
         */
         this.objetivo = objetivo;
 
 
         /**
-         * Propiedad a obtener
+         * Identificador de la propiedad
          * @type {string}
         */
         this.propiedad = propiedad;
@@ -784,6 +899,47 @@ export class Get extends Expresion {
         return visitor.visitGet(this);
     }
 }
+    
+export class Set extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {Expresion} options.objetivo Objeto de la propiedad
+ * @param {string} options.propiedad Identificador de la propiedad
+ * @param {Expresion} options.valor Valor de la propiedad
+    */
+    constructor({ objetivo, propiedad, valor }) {
+        super();
+        
+        /**
+         * Objeto de la propiedad
+         * @type {Expresion}
+        */
+        this.objetivo = objetivo;
+
+
+        /**
+         * Identificador de la propiedad
+         * @type {string}
+        */
+        this.propiedad = propiedad;
+
+
+        /**
+         * Valor de la propiedad
+         * @type {Expresion}
+        */
+        this.valor = valor;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitSet(this);
+    }
+}
 
     
-export default { Expresion, OperacionBinaria, OperacionUnaria, Agrupacion, Numero, Char,Float, String, Boolean, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Switch, Break, Continue, Return, Llamada, Get }
+export default { Expresion, OperacionBinaria, OperacionUnaria, Agrupacion, Numero, Char,Float, String, Boolean, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Switch, Break, Continue, Return, Llamada,  DeclaracionFuncion, DeclaracionClase, Instancia, Get, Set, Foreach };
