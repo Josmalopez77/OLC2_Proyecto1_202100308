@@ -450,6 +450,25 @@
             throw new ContinueException();
         }
 
+    /**
+     * @type {BaseVisitor['visitTernario']}
+     */
+    visitTernario(node) {
+        const condicion = node.condi.accept(this);
+
+        if(condicion.tipo != "boolean"){
+            this.almacenamiento.agregarError({descripcion:"La condición del operador ternario no es de tipo boolean", linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
+        }
+
+        if(condicion.valor){
+            return node.exp1.accept(this);
+        }else{
+            return node.exp2.accept(this);
+        }
+
+    }
+
+
         /**
          * @type {BaseVisitor['visitReturn']}
          */

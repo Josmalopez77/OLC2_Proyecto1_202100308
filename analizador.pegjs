@@ -7,6 +7,7 @@
     'char': nodos.Char, 
     'string': nodos.String,
     'boolean': nodos.Boolean,
+    'ternario': nodos.Ternario,
     'agrupacion': nodos.Agrupacion,
     'binaria': nodos.OperacionBinaria,
     'unaria': nodos.OperacionUnaria,
@@ -66,7 +67,7 @@ tipoInt2 = "int" _ id:Identificador _  ";"  { return crearNodo('declaracionVaria
 tipoString2 = "string" _ id:Identificador _ ";" { return crearNodo('declaracionVariable', { id, exp:"",tipo:"string" }) }
 tipoBoolean2 = "boolean" _ id:Identificador _  ";" { return crearNodo('declaracionVariable', { id, exp:true,tipo:"boolean" }) }
 tipoChar2 = "char" _ id:Identificador _ ";"{ return crearNodo('declaracionVariable', { id, exp:'', tipo:"char" }) }
-
+Ternario = condi:Logicas _ "?" _ exp1:Logicas _ ":" _ exp2:Logicas { return crearNodo('ternario', { condi, exp1, exp2 }) }
 vals = "int" / "float" / "string" / "char" / "boolean"
 
 FuncDcl = tipo:(vals/"void") _ id:Identificador _ "(" _ params:Parametros? _ ")" _ bloque:Bloque { return crearNodo('declaracionFuncion', { tipo, id, params: params || [], bloque }) }
@@ -126,7 +127,8 @@ Asignacion = asignado:Llamada _ "=" _ asgn:Asignacion {
                   }
                   
                   return crearNodo('set', { objetivo: asignado.objetivo, propiedad: asignado.propiedad, valor: asgn })
-                } / Logicas
+                }/Ternario 
+                / Logicas
 
 Igulacion = izq:Comparacion expansion:(
   _ op:("==" / "!=") _ der:Comparacion { return { tipo: op, der } }

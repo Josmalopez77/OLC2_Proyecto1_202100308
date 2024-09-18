@@ -695,6 +695,47 @@ export class Continue extends Expresion {
     }
 }
     
+export class Ternario extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {Expresion} options.condi Condicion del ternario
+ * @param {Expresion} options.exp1 Expresion verdadera
+ * @param {Expresion} options.exp2 Expresion falsa
+    */
+    constructor({ condi, exp1, exp2 }) {
+        super();
+        
+        /**
+         * Condicion del ternario
+         * @type {Expresion}
+        */
+        this.condi = condi;
+
+
+        /**
+         * Expresion verdadera
+         * @type {Expresion}
+        */
+        this.exp1 = exp1;
+
+
+        /**
+         * Expresion falsa
+         * @type {Expresion}
+        */
+        this.exp2 = exp2;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitTernario(this);
+    }
+}
+
 export class Return extends Expresion {
 
     /**

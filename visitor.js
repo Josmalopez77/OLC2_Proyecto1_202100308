@@ -39,6 +39,8 @@
 
  * @typedef {import('./nodos').Bloque} Bloque
 
+* @typedef {import('./nodos').Ternario} Ternario
+
 
  * @typedef {import('./nodos').If} If
 
@@ -256,6 +258,14 @@ export class BaseVisitor {
         throw new Error('Metodo visitBreak no implementado');
     }
     
+/**
+     * @param {Ternario} node
+     * @returns {any}
+     */
+visitTernario(node) {
+    throw new Error('Metodo visitTernario no implementado');
+}
+
 
     /**
      * @param {Continue} node
