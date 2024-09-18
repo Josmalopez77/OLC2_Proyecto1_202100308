@@ -28,7 +28,8 @@
     'foreach': nodos.Foreach,
     'declaracionFuncion': nodos.DeclaracionFuncion,
     'declaracionClase': nodos.DeclaracionClase,
-    'intancia': nodos.Instancia,
+    'instancia': nodos.Instancia,
+    'recStruct': nodos.RecStruct,
     'struct': nodos.Struct,
     'get': nodos.Get,
     'set': nodos.Set
@@ -48,8 +49,8 @@
 programa = _ dcl:Declaracion* _ { return dcl }
 
 Declaracion = dcl:ClassDcl _ { return dcl }
-            / dcl:tipoVar _ {  return dcl }
             / dcl:InstanciaDcl _ { return dcl }
+            / dcl:tipoVar _ {  return dcl }
             / stmt:Stmt _ { return stmt }
             / dcl:FuncDcl _ { return dcl }
             
@@ -81,11 +82,11 @@ Bloque = "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }
 ClassDcl  = "struct" _ id:Identificador _ "{" _ dcls:ClassBody* _ "}" _ ";" { return crearNodo('declaracionClase', { id, dcls }) }
 ClassBody = tipo: (vals/Identificador) _ id: Identificador _ ";" _ { return { tipo, id } }
 
-InstanciaDcl = tipo:Identificador _ id:Identificador _ "=" _ instancia:Expresion _ ";" { return crearNodo('instancia', { tipo, id, instancia }) } 
+InstanciaDcl = tipo:Identificador _ id:Identificador _ "=" _ instancia:Expresion _ ";" {console.log("PASO 1"); return crearNodo('instancia', { tipo, id, instancia }) } 
 
-RecStruct = _ tipo: Identificador _ "{"_ atrib:( datAtri: DatoStruc _ datAtris:("," _ atriData: DatoStruc { return atriData })* _ { return [datAtri, ...datAtris] }) _ "}" { return crearNodo('struct', { tipo, atrib }) }
+RecStruct = _ tipo: Identificador _ "{"_ atrib:( datAtri: DatoStruc _ datAtris:("," _ atriData: DatoStruc {console.log("PASO 2"); return atriData })* _ {console.log("PASO 3"); return [datAtri, ...datAtris] }) _ "}" { console.log("PASO 4");return crearNodo('recStruct', { tipo, atrib }) }
 
-DatoStruc = id: Identificador _ ":" _ exp: Expresion _ { return { id, exp } }
+DatoStruc = id: Identificador _ ":" _ exp: Expresion _ { console.log("PASO 5");return { id, exp } }
 
 Stmt = "System.out.println(" _ exp:Expresion _ exps: ( _ ","_ exps: Expresion {return exps})* _ ")" _ ";" { return crearNodo('print', {outputs: [exp, ...exps]}) }
     / "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }
@@ -189,7 +190,7 @@ Unaria = "-" _ num:Unaria { return crearNodo('unaria', { op: '-', exp: num }); }
           / "typeof" _ exp:Expresion _ { return crearNodo('unaria', {op: 'typeof', exp }) }
           / "Object.keys(" _ exp:Expresion _ ")" { return crearNodo('unaria', {op: 'objkeys', exp }) }
        / Llamada
-tipos2 = Float / Int / Boolean / Char / Cadena
+tipos2 = RecStruct/Float / Int / Boolean / Char / Cadena
 Logicas = izq:Igulacion expresion:(
               _ op:("&&" / "||") _ der:Igulacion { return { tipo: op, der } }
             )* {

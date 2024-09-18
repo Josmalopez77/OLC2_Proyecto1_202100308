@@ -5,7 +5,7 @@
     import { Invocable } from "./invocable.js";
     import { embebidas } from "./embebidas.js";
     import { FuncionForanea } from "./foreanea.js";
-    import { Clase } from "./clase.js";
+    import { Struct} from "./struct.js";
     import { Instancia } from "./instancia.js";
 
 
@@ -530,9 +530,10 @@
             };
         });
 
-        const clase = new Clase(node.id, propiedades);
-        this.almacenamiento.agregarVariable({id:node.id, tipo:"Struct", tipoDato:"Struct",ambito:"global", valor:clase,linea:node.location.start.line, columna:node.location.start.column});
-        this.entornoActual.setVariable(node.id, { valor: clase, tipo: 'clase' });
+        const nuevoStruct = new Struct(node.id, propiedades);
+        this.almacenamiento.agregarVariable({id:node.id, tipo:"Struct", tipoDato:"Struct",ambito:"global", valor:nuevoStruct,linea:node.location.start.line, columna:node.location.start.column});
+        console.log("DECLARANDO CLASE", node.id, "valor", nuevoStruct);
+        this.entornoActual.setVariable(node.id, { valor: nuevoStruct, tipo: 'clase' });
 
     }
 
@@ -550,7 +551,7 @@
             };
         });
 
-        return {valor:new Instancia(new Clase(node.tipo, temp)), tipo:node.tipo};
+        return {valor:new Instancia(new Struct(node.tipo, temp)), tipo:node.tipo};
     }
 
 
@@ -558,19 +559,38 @@
     * @type {BaseVisitor['visitInstancia']}
     */
     visitInstancia(node) {
-
-        const clase = this.entornoActual.get(node.id);
+        const tipo = node.tipo;
+        const id = node.id;
         const instancia = node.instancia.accept(this);
+            console.log("STRUCT", instancia);
+            const struct = this.entornoActual.getVariable(tipo)
+ 
+            this.entornoActual.setVariable(id,{valor:instancia.valor,tipo:tipo} );
 
+            return struct.invocar(this, instancia.valor.struct.properties);
+        
+    }
 
-        if (!(clase instanceof Clase)) {
-            this.almacenamiento.agregarError({descripcion:"No es posible instancial algo que no es una clase", linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
-            throw new Error('No es posible instanciar algo que no es una clase');
-        }
+     /**
+     * @type {BaseVisitor['visitRecStruct']}
+     */
+     visitRecStruct(node){
+        const tipo = node.tipo;
+            const atributos = node.atrib 
 
+            let temp = {};
 
-        this.entornoActual.setVariable(id,{valor:instancia.valor, tipo:tipo} );
-        return clase.invocar(this, instancia.valor.struct.properties);
+            const struct = this.entornoActual.getVariable(tipo);
+
+            atributos.forEach(atributo => {
+                const id = atributo.id;
+
+                const pivote = atributo.exp.accept(this);
+                    temp[id] = {valor:pivote.valor , tipo:pivote.tipo};
+     
+            });
+
+            return {valor:new Instancia(new Struct(tipo, temp)), tipo:tipo};
     }
 
 

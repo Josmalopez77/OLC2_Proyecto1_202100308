@@ -1,30 +1,33 @@
-import { Clase } from "./clase.js";
+import { Struct } from './struct.js';
+export class Instancia  {
 
-export class Instancia {
 
-    constructor(clase) {
-
+    constructor(struct){
         /**
-         * @type {Clase}
-         * */
-        this.clase = clase;
-        this.propiedades = {};
+         * @type {Struct}
+         */
+        this.struct = struct;
+
+        this.properties = {};
+        
     }
 
-    set(nombre, valor) {
-        this.propiedades[nombre] = valor;
+
+    set(nombre, valor, nodo) {
+
+        if (!(nombre in this.struct.properties)) {
+            let err = new SemanticError(nodo.location.start.line, nodo.location.start.column, `Propiedad no encontrada: ${nombre}`);
+            errores.push(err);
+        }
+        this.struct.properties[nombre] = valor;
     }
 
-    get(nombre) {
-        if (this.propiedades.hasOwnProperty(nombre)) {
-            return this.propiedades[nombre];
+    get(nombre,nodo) {
+        if(this.struct.properties.hasOwnProperty(nombre)){
+            return this.struct.properties[nombre];
         }
 
-        const metodo = this.clase.buscarMetodo(nombre);
-        if (metodo) {
-            return metodo.atar(this);
-        }
-
-        throw new Error(`Propiedad no encontrada: ${nombre}`);
+        let err = new SemanticError(nodo.location.start.line, nodo.location.start.column, `Propiedad no encontrada: ${nombre}`);
+        errores.push(err);
     }
 }

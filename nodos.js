@@ -875,6 +875,39 @@ export class DeclaracionClase extends Expresion {
     }
 }
 
+export class RecStruct extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.tipo Identificador del struct
+ * @param {Expresion[]} options.atrib Atributos del struct
+    */
+    constructor({ tipo, atrib }) {
+        super();
+        
+        /**
+         * Identificador del struct
+         * @type {string}
+        */
+        this.tipo = tipo;
+
+
+        /**
+         * Atributos del struct
+         * @type {Expresion[]}
+        */
+        this.atrib = atrib;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitRecStruct(this);
+    }
+}
+
 export class Struct extends Expresion {
 
     /**
@@ -1023,4 +1056,4 @@ export class Set extends Expresion {
 }
 
     
-export default { Expresion, OperacionBinaria, OperacionUnaria, Agrupacion, Numero, Char,Float, String, Boolean, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Switch, Break, Continue, Return, Llamada,  DeclaracionFuncion, DeclaracionClase, Instancia, Get, Set, Foreach };
+export default { Expresion, OperacionBinaria, OperacionUnaria, Agrupacion, Numero, Char,Float, String, Boolean, DeclaracionVariable, ReferenciaVariable, Print, ExpresionStmt, Asignacion, Bloque, If, While, For, Switch, Break, Continue, Return, Llamada,  DeclaracionFuncion, DeclaracionClase, Instancia, Get, Set, Foreach, RecStruct,Ternario, Struct };

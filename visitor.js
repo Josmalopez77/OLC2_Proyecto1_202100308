@@ -41,6 +41,10 @@
 
 * @typedef {import('./nodos').Ternario} Ternario
 
+* @typedef {import('./nodos').Struct} Struct
+
+* @typedef {import('./nodos').RecStruct} RecStruct 
+
 
  * @typedef {import('./nodos').If} If
 
@@ -75,6 +79,8 @@
 
 
  * @typedef {import('./nodos').Get} Get
+
+* @typedef {import('./nodos').Set} Set
 
  */
 
@@ -344,6 +350,14 @@ visitTernario(node) {
      */
     visitSet(node) {
         throw new Error('Metodo visitSet no implementado');
+    }
+
+     /**
+     * @param {RecStruct} node
+     * @returns {any}
+     */
+     visitRecStruct(node) {
+        throw new Error('Metodo visitRecStruct no implementado');
     }
     
 }
