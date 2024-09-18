@@ -6,7 +6,7 @@ import { Expresion } from "./nodos.js";
 
 export class Clase extends Invocable {
 
-    constructor(nombre, propiedades, metodos) {
+    constructor(nombre, propiedades) {
         super();
 
         /**
@@ -19,10 +19,6 @@ export class Clase extends Invocable {
          */
         this.propiedades = propiedades;
 
-        /**
-         * @type {Object.<string, FuncionForanea>}
-         */
-        this.metodos = metodos;
     }
 
     /**
@@ -37,13 +33,7 @@ export class Clase extends Invocable {
     }
 
     aridad() {
-        const constructor = this.buscarMetodo('constructor');
-
-        if (constructor) {
-            return constructor.aridad();
-        }
-
-        return 0;
+        return Object.keys(this.properties).length;
     }
 
 
@@ -51,29 +41,14 @@ export class Clase extends Invocable {
     * @type {Invocable['invocar']}
     */
     invocar(interprete, args) {
-        const nuevaIntancia = new Instancia(this);
+        const instanciaNueva = new Instancia(this);
 
-        /*
-        class asdasd {
-            var a = 2;
-
-            constructor(a) {
-                this.a = 4;
-                this.b = 4;
-            }   
-        }
-    */
-        // valores por defecto
-        Object.entries(this.propiedades).forEach(([nombre, valor]) => {
-            nuevaIntancia.set(nombre, valor.accept(interprete));
+        Object.entries(this.properties).forEach(([nombre, valor]) => {
+            instanciaNueva.set(nombre, valor);
         });
 
-        const constructor = this.buscarMetodo('constructor');
-        if (constructor) {
-            constructor.atar(nuevaIntancia).invocar(interprete, args);
-        }
+        return instanciaNueva;
 
-        return nuevaIntancia;
     }
 
 }

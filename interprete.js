@@ -11,8 +11,9 @@
 
     export class InterpreterVisitor extends BaseVisitor {
 
-        constructor() {
+        constructor(almacenamiento) {
             super();
+            this.almacenamiento = almacenamiento;
             this.entornoActual = new Entorno();
 
             // funciones embebidas
@@ -76,6 +77,7 @@
                 case '||':
                     return izq || der;
                 default:
+                    this.almacenamiento.agregarError({descripcion:"Operador no soportado", linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
                     throw new Error(`Operador no soportado: ${node.op}`);
             }
         }
@@ -91,7 +93,36 @@
                     return -exp;
                 case '!':
                     return !exp;
+                case 'typeof':
+                    const tipo = typeof exp;
+                    if(tipo === "number") {
+                        if(Number.isInteger(exp)) {
+                            return "int";
+                        }else {
+                            return "float";
+                        }
+                    }
+                    if(tipo === "string"){
+                        if(exp.length === 1){
+                            return "char";
+                        }else {
+                            return "string";
+                        }
+                    }
+                    return "boolean";
+                case 'toString':
+                    return exp.toString();
+                case 'toUpperCase':
+                    return exp.toUpperCase();
+                case 'toLowerCase':
+                    return exp.toLowerCase();
+                case 'parseInt':
+                    return parseInt(exp);
+                case 'parseFloat':
+                    return parseFloat(exp);
+                
                 default:
+                    this.almacenamiento.agregarError({descripcion:"Operador no soportado", linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
                     throw new Error(`Operador no soportado: ${node.op}`);
             }
         }
@@ -148,14 +179,49 @@
 
             if (node.exp && typeof node.exp.accept === 'function') {
                 const valorVariable = node.exp.accept(this);
-                console.log(`Declarando variable ${nombreVariable} de tipo ${tipoVariable} con valor ${valorVariable}`);
+                let tipo = typeof valorVariable;
+
+            if (tipo === "number") {
+                if(Number.isInteger(valorVariable)) {
+                    tipo = "int";
+                }else {
+                    tipo = "float";
+                }
+            }else if(tipo === "string"){
+                if(valorVariable.length === 1){
+                    tipo = "char";
+                }else {
+                    tipo = "string";
+                }
+            }
+
+            if(tipoVariable === "var"){
+                console.log(`Declarando variable1 ${nombreVariable} de tipo ${tipo} con valor ${valorVariable}`);
+                this.almacenamiento.agregarVariable({id:nombreVariable, tipo:"var", tipoDato:tipo,ambito:"global", valor:valorVariable,linea:node.location.start.line, columna:node.location.start.column});
+            this.entornoActual.setVariable(nombreVariable, { valor: valorVariable, tipo: tipoVariable });
+            return;
+            }
+
+            if(tipo !== tipoVariable) {
+                this.almacenamiento.agregarVariable({id:nombreVariable, tipo:"Variable", tipoDato:tipoVariable,ambito:"global", valor:null,linea:node.location.start.line, columna:node.location.start.column});
+                this.entornoActual.setVariable(nombreVariable, { valor: null, tipo: tipoVariable });
+                this.almacenamiento.agregarError({descripcion:`Tipo de valor incorrecto para la variable ${nombreVariable}. Esperado ${tipoVariable}, recibido ${tipo}.`, linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
+                this.almacenamiento.imprimirErrores();
+                console.log(`Tipo de valor incorrecto para la variable ${nombreVariable}. Esperado ${tipoVariable}, recibido ${tipo}.`);
+                return;
+            }
+                console.log(`Declarando variable1 ${nombreVariable} de tipo ${tipoVariable} con valor ${valorVariable}`);
+                this.almacenamiento.agregarVariable({id:nombreVariable, tipo:"Variable", tipoDato:tipoVariable,ambito:"global", valor:valorVariable,linea:node.location.start.line, columna:node.location.start.column});
                 this.entornoActual.setVariable(nombreVariable, { valor: valorVariable, tipo: tipoVariable });
                 return;
             } 
             const valorVariable = node.exp;
-            console.log(`Declarando variable ${nombreVariable} de tipo ${tipoVariable} con valor ${valorVariable}`);
+            
 
-        this.entornoActual.setVariable(nombreVariable, { valor: valorVariable, tipo: tipoVariable });
+  
+            console.log(`Declarando variable2 ${nombreVariable} de tipo ${tipoVariable} con valor ${valorVariable}`);
+            this.almacenamiento.agregarVariable({id:nombreVariable, tipo:"Variable", tipoDato:tipoVariable,ambito:"global", valor:valorVariable,linea:node.location.start.line, columna:node.location.start.column});
+            this.entornoActual.setVariable(nombreVariable, { valor: valorVariable, tipo: tipoVariable });
     
     }
 
@@ -224,6 +290,9 @@
         console.log(`Tipo esperado de la variable: ${variable.tipo}`);
 
         if (variable.tipo != tipoVariable) {
+            this.entornoActual.assignVariable(node.id, null);
+            this.almacenamiento.agregarError({descripcion:`Tipo de valor incorrecto para la variable ${node.id}. Esperado ${variable.tipo}, recibido ${valor.tipo}.`, linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
+            return
             throw new Error(`Tipo de valor incorrecto para la variable ${node.id}. Esperado ${variable.tipo}, recibido ${valor.tipo}.`);
         }
 
@@ -283,7 +352,7 @@
                 if (error instanceof ContinueException) {
                     return this.visitWhile(node);
                 }
-
+                this.almacenamiento.agregarError({descripcion:"Error en el while", linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
                 throw error;
 
             }
@@ -363,15 +432,6 @@
         
 
         /**
-         * @type {BaseVisitor['visitForeach']}
-         */
-        visitForeach(node) {
-
-            
-        }
-
-
-        /**
          * @type {BaseVisitor['visitBreak']}
          */
         visitBreak(node) {
@@ -410,11 +470,13 @@
             const argumentos = node.args.map(arg => arg.accept(this));
 
             if (!(funcion instanceof Invocable)) {
+                this.almacenamiento.agregarError({descripcion:"No Invocable", linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
                 throw new Error('No es invocable');
                 // 1() "sdalsk"()
             }
 
             if (funcion.aridad() !== argumentos.length) {
+                this.almacenamiento.agregarError({descripcion:"Aridad Incorrecta", linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
                 throw new Error('Aridad incorrecta');
             }
 
@@ -429,6 +491,7 @@
         console.log("DECLARANDO FUNCION", node.id);
         console.log("DE TIPO", node.tipo);
         console.log("ACCION",  funcion);
+        this.almacenamiento.agregarVariable({id:node.id, tipo:"Funcion", tipoDato:node.tipo,ambito:"Global", valor:funcion,linea:node.location.start.line, columna:node.location.start.column});
         this.entornoActual.setVariable(node.id, {valor: funcion, tipo: node.tipo});
     }
 
@@ -437,23 +500,40 @@
     * @type {BaseVisitor['visitDeclaracionClase']}
     */
     visitDeclaracionClase(node) {
-
-        const metodos = {}
         const propiedades = {}
 
-        node.dcls.forEach(dcl => {
-            if (dcl instanceof nodos.DeclaracionClase) {
-                metodos[dcl.id] = new FuncionForanea(dcl, this.entornoActual);
-            } else if (dcl instanceof nodos.DeclaracionVariable) {
-                propiedades[dcl.id] = dcl.exp
-            }
+        node.dcls.forEach(d => {
+
+            propiedades[d.id] = {
+                tipo: d.tipo,
+                valor: null
+                
+            };
         });
 
-        const clase = new Clase(node.id, propiedades, metodos);
-
+        const clase = new Clase(node.id, propiedades);
+        this.almacenamiento.agregarVariable({id:node.id, tipo:"Struct", tipoDato:"Struct",ambito:"global", valor:clase,linea:node.location.start.line, columna:node.location.start.column});
         this.entornoActual.setVariable(node.id, { valor: clase, tipo: 'clase' });
 
     }
+
+    /**
+     * @type {BaseVisitor['visitStruct']}
+     */
+    visitStruct(node) {
+        let temp = {}
+
+        node.dcls.forEach(d => {
+            const pivote = atributo.exp.accept(this);
+            temp[d.id] = {
+                tipo: pivote.tipo,
+                valor: pivote.valor
+            };
+        });
+
+        return {valor:new Instancia(new Clase(node.tipo, temp)), tipo:node.tipo};
+    }
+
 
     /**
     * @type {BaseVisitor['visitInstancia']}
@@ -461,17 +541,17 @@
     visitInstancia(node) {
 
         const clase = this.entornoActual.get(node.id);
-
-        const argumentos = node.args.map(arg => arg.accept(this));
+        const instancia = node.instancia.accept(this);
 
 
         if (!(clase instanceof Clase)) {
+            this.almacenamiento.agregarError({descripcion:"No es posible instancial algo que no es una clase", linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
             throw new Error('No es posible instanciar algo que no es una clase');
         }
 
 
-
-        return clase.invocar(this, argumentos);
+        this.entornoActual.setVariable(id,{valor:instancia.valor, tipo:tipo} );
+        return clase.invocar(this, instancia.valor.struct.properties);
     }
 
 
@@ -486,6 +566,7 @@
 
         if (!(instancia instanceof Instancia)) {
             console.log(instancia);
+            this.almacenamiento.agregarError({descripcion:"No es posible obtener una propiedad de algo que no es una instancia", linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
             throw new Error('No es posible obtener una propiedad de algo que no es una instancia');
         }
 
@@ -499,6 +580,7 @@
         const instancia = node.objetivo.accept(this);
 
         if (!(instancia instanceof Instancia)) {
+            this.almacenamiento.agregarError({descripcion:"No es posible asignar una propiedad de algo que no es una instancia", linea:node.location.start.line, columna:node.location.start.column, tipo:"Semántico"});
             throw new Error('No es posible asignar una propiedad de algo que no es una instancia');
         }
 

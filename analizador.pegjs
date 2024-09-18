@@ -27,7 +27,8 @@
     'foreach': nodos.Foreach,
     'declaracionFuncion': nodos.DeclaracionFuncion,
     'declaracionClase': nodos.DeclaracionClase,
-    'intancia:': nodos.Instancia,
+    'intancia': nodos.Instancia,
+    'struct': nodos.Struct,
     'get': nodos.Get,
     'set': nodos.Set
   };
@@ -47,22 +48,24 @@ programa = _ dcl:Declaracion* _ { return dcl }
 
 Declaracion = dcl:ClassDcl _ { return dcl }
             / dcl:tipoVar _ {  return dcl }
-            / dcl:FuncDcl _ { return dcl }
+            / dcl:InstanciaDcl _ { return dcl }
             / stmt:Stmt _ { return stmt }
+            / dcl:FuncDcl _ { return dcl }
+            
 
 
-tipoVar =  tipoString2  / tipoChar2 / tipoBoolean2 /tipoInt2/tipoFloat2 /tipoInt / tipoFloat /  tipoString  / tipoChar/ tipoBoolean /   "var" _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable', { id, exp }) }
+tipoVar =  tipoString2  / tipoChar2 / tipoBoolean2 /tipoInt2/tipoFloat2 /tipoInt / tipoFloat /  tipoString  / tipoChar/ tipoBoolean /   tipo:"var" _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable', { id, exp, tipo }) }
 tipoFloat = "float" _ id:Identificador _ "=" _ exp:Expresion _ ";"  {  return crearNodo('declaracionVariable', { id, exp, tipo: "float" });  }
 tipoInt = "int" _ id:Identificador _ "=" _ exp:Expresion _ ";"  { return crearNodo('declaracionVariable', { id, exp,tipo:"int" }) }
 tipoString = "string" _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable', { id, exp,tipo:"string" }) }
 tipoBoolean = "boolean" _ id:Identificador _ "=" _ exp:Expresion _ ";" { return crearNodo('declaracionVariable', { id, exp,tipo:"boolean" }) }
-tipoChar = "char" _ id:Identificador _ "=" _ exp:Expresion _ ";"{ return crearNodo('declaracionVariable', { id, exp, tipo:"string" }) }
+tipoChar = "char" _ id:Identificador _ "=" _ exp:Expresion _ ";"{ return crearNodo('declaracionVariable', { id, exp, tipo:"char" }) }
 
 tipoFloat2 = "float" _ id:Identificador _  ";"  {  return crearNodo('declaracionVariable', { id, exp:0.00, tipo: "float" });  }
 tipoInt2 = "int" _ id:Identificador _  ";"  { return crearNodo('declaracionVariable', { id, exp:0,tipo:"int" }) }
 tipoString2 = "string" _ id:Identificador _ ";" { return crearNodo('declaracionVariable', { id, exp:"",tipo:"string" }) }
 tipoBoolean2 = "boolean" _ id:Identificador _  ";" { return crearNodo('declaracionVariable', { id, exp:true,tipo:"boolean" }) }
-tipoChar2 = "char" _ id:Identificador _ ";"{ return crearNodo('declaracionVariable', { id, exp:'', tipo:"string" }) }
+tipoChar2 = "char" _ id:Identificador _ ";"{ return crearNodo('declaracionVariable', { id, exp:'', tipo:"char" }) }
 
 vals = "int" / "float" / "string" / "char" / "boolean"
 
@@ -73,10 +76,15 @@ Parameters = tipo:(vals/ Identificador) dimen:Dimensiones? _ id:Identificador {r
 Dimensiones = ("[" _ "]")* {return text();}
 
 Bloque = "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }
-ClassDcl = "struct" _ id:Identificador _ "{" _ dcls:ClassBody* _ "}" { return crearNodo('declaracionClase', { id, dcls }) }
 
-ClassBody = dcl:tipoVar _ { return dcl }
-          / dcl:FuncDcl _ { return dcl }
+ClassDcl  = "struct" _ id:Identificador _ "{" _ dcls:ClassBody* _ "}" _ ";" { return crearNodo('declaracionClase', { id, dcls }) }
+ClassBody = tipo: (vals/Identificador) _ id: Identificador _ ";" _ { return { tipo, id } }
+
+InstanciaDcl = tipo:Identificador _ id:Identificador _ "=" _ instancia:Expresion _ ";" { return crearNodo('instancia', { tipo, id, instancia }) } 
+
+RecStruct = _ tipo: Identificador _ "{"_ atrib:( datAtri: DatoStruc _ datAtris:("," _ atriData: DatoStruc { return atriData })* _ { return [datAtri, ...datAtris] }) _ "}" { return crearNodo('struct', { tipo, atrib }) }
+
+DatoStruc = id: Identificador _ ":" _ exp: Expresion _ { return { id, exp } }
 
 Stmt = "System.out.println(" _ exp:Expresion _ exps: ( _ ","_ exps: Expresion {return exps})* _ ")" _ ";" { return crearNodo('print', {outputs: [exp, ...exps]}) }
     / "{" _ dcls:Declaracion* _ "}" { return crearNodo('bloque', { dcls }) }
@@ -109,7 +117,15 @@ Identificador = [a-zA-Z][a-zA-Z0-9]* { return text() }
 Expresion =  Asignacion  
 
 Asignacion = asignado:Llamada _ "=" _ asgn:Asignacion {
-                  return crearNodo('asignacion', { id: asignado.id, asgn })
+                  if (asignado instanceof nodos.ReferenciaVariable) {
+                    return crearNodo('asignacion', { id: asignado.id, asgn })
+                  }
+
+                  if (!(asignado instanceof nodos.Get || asignado instanceof nodos.nodos.ArregloVal || asignado instanceof nodos.nodos.ArregloFunc || asignado instanceof nodos.nodos.Arreglo || asignado instanceof nodos.ArregloVacio || asignado instanceof nodos.CopiarArreglo)) {
+                    throw new Error('Solo se pueden asignar valores a propiedades de objetos')
+                  }
+                  
+                  return crearNodo('set', { objetivo: asignado.objetivo, propiedad: asignado.propiedad, valor: asgn })
                 } / Logicas
 
 Igulacion = izq:Comparacion expansion:(
@@ -163,6 +179,13 @@ Multiplicacion = izq:Unaria expansion:(
 // Operaciones Unarias
 Unaria = "-" _ num:Unaria { return crearNodo('unaria', { op: '-', exp: num }); }
         / "!" _ num:Unaria { return crearNodo('unaria', { op: '!', exp: num }); }
+        /"toString(" _ exp:Expresion _ ")" { return crearNodo('unaria', {op: 'toString', exp }) }
+          / "toUpperCase(" _ exp:Expresion _ ")" { return crearNodo('unaria', {op: 'toUpperCase', exp }) }
+          / "toLowerCase(" _ exp:Expresion _ ")" { return crearNodo('unaria', {op: 'toLowerCase', exp }) }
+          / "parseInt(" _ exp:Expresion _ ")" { return crearNodo('unaria', {op: 'parseInt', exp }) }
+          / "parsefloat(" _ exp:Expresion _ ")" { return crearNodo('unaria', {op: 'parseFloat', exp }) }
+          / "typeof" _ exp:Expresion _ { return crearNodo('unaria', {op: 'typeof', exp }) }
+          / "Object.keys(" _ exp:Expresion _ ")" { return crearNodo('unaria', {op: 'objkeys', exp }) }
        / Llamada
 tipos2 = Float / Int / Boolean / Char / Cadena
 Logicas = izq:Igulacion expresion:(
@@ -226,5 +249,5 @@ Boolean = "true" { return crearNodo('boolean', { valor: true }) }
 
 _ = ([ \t\n\r] / Comentarios)* 
 
-Comentarios = "//" (![\n] .)*
-            / "/*" (!("*/") .)* "*/"
+Comentarios = "//"[^\n]*{ }
+            / "/*" (!"*/" .)* "*/" { }

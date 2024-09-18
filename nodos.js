@@ -806,7 +806,7 @@ export class DeclaracionClase extends Expresion {
     /**
     * @param {Object} options
     * @param {string} options.id Identificador de la clase
- * @param {Expresion[]} options.dcls Declaraciones de la clase
+ * @param {Expresion} options.dcls Declaraciones de la clase
     */
     constructor({ id, dcls }) {
         super();
@@ -820,7 +820,7 @@ export class DeclaracionClase extends Expresion {
 
         /**
          * Declaraciones de la clase
-         * @type {Expresion[]}
+         * @type {Expresion}
         */
         this.dcls = dcls;
 
@@ -833,17 +833,57 @@ export class DeclaracionClase extends Expresion {
         return visitor.visitDeclaracionClase(this);
     }
 }
+
+export class Struct extends Expresion {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.tipo Identificador del struct
+ * @param {Expresion[]} options.atrib Atributos del struct
+    */
+    constructor({ tipo, atrib }) {
+        super();
+        
+        /**
+         * Identificador del struct
+         * @type {string}
+        */
+        this.tipo = tipo;
+
+
+        /**
+         * Atributos del struct
+         * @type {Expresion[]}
+        */
+        this.atrib = atrib;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitStruct(this);
+    }
+}
     
 export class Instancia extends Expresion {
 
     /**
     * @param {Object} options
+    * @param {string} options.tipo Identificador de la clase
     * @param {string} options.id Identificador de la clase
- * @param {Expresion[]} options.args Argumentos de la instancia
+ * @param {Expresion} options.instancia Argumentos de la instancia
     */
-    constructor({ id, args }) {
+    constructor({ tipo, id, instancia }) {
         super();
         
+        /**
+         * Identificador de la clase
+         * @type {string}
+        */
+        this.tipo = tipo;
+
         /**
          * Identificador de la clase
          * @type {string}
@@ -853,9 +893,9 @@ export class Instancia extends Expresion {
 
         /**
          * Argumentos de la instancia
-         * @type {Expresion[]}
+         * @type {Expresion}
         */
-        this.args = args;
+        this.instancia = instancia;
 
     }
 

@@ -299,6 +299,15 @@ export class BaseVisitor {
     visitDeclaracionClase(node) {
         throw new Error('Metodo visitClassDcl no implementado');
     }
+
+    /**
+         * @param {Struct} node
+         * @returns {any}
+         */
+    visitStruct(node) {
+        throw new Error('Metodo visitStruct no implementado');
+    }
+
     
 
     /**
